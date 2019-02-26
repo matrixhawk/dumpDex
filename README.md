@@ -1,4 +1,4 @@
-# dumpDex-Android脱壳神器
+# dumpDex-Android脱壳
 
 > 插件需要在xposed环境中使用,支持市面上大多数加密壳,软件仅供学习用，请勿用于其他用途,项目不是成品，可能会引起软件崩溃
 
@@ -10,11 +10,20 @@ Android Studio 3.0
 
 ### 支持设备
 
-大多数xposed环境的手机，暂不支持模拟器，（android8.0手机dump 64位应用会闪退，实际上已经dump成功）
+大多数xposed环境的手机，暂不支持模拟器
+
+### apk 下载
+
+[https://github.com/WrBug/dumpDex/releases](https://github.com/WrBug/dumpDex/releases)
+
+[https://github.com/WrBug/DeveloperHelper](https://github.com/WrBug/DeveloperHelper)  **推荐下载**
+
+易开发已集成dumpdex功能
 
 ### 分支
 
 [develop](https://github.com/WrBug/dumpDex/tree/develop) 开发分支
+
 
 [master](https://github.com/WrBug/dumpDex/tree/master) 稳定分支
 
@@ -24,13 +33,8 @@ Android Studio 3.0
 
 **apk文件不会实时更新，获取最新apk请自行编译源码**
 
-### apk 下载
 
-apk文件为master分支打包应用，develop分支请自行编译
 
-[https://doc.wrbug.com/](https://doc.wrbug.com/)
-
-[https://pan.baidu.com/s/1Rv9CbvoOlj7TTXyDmbCh-g](https://pan.baidu.com/s/1Rv9CbvoOlj7TTXyDmbCh-g)
 
 ### 源码编译
 
@@ -51,6 +55,11 @@ chmod 777 /data/local/tmp/libnativeDump.so
 
 [https://www.wrbug.com/](https://www.wrbug.com/)
 
+### 相关文章(网友分享)
+
+[dumpDex 脱壳原理](http://liteng1220.com/blog/articles/dumpdex-principle/)
+
+[Android逆向之路---脱壳360加固原理解析](https://juejin.im/post/5c1934226fb9a04a0b221c3c)
 
 ### 支持开发，欢迎打赏
 
