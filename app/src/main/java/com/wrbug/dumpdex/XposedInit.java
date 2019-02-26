@@ -1,12 +1,15 @@
 package com.wrbug.dumpdex;
 
+import android.os.Build;
+
+import com.wrbug.dumpdex.dump.LowSdkDump;
+import com.wrbug.dumpdex.dump.OreoDump;
+import com.wrbug.dumpdex.util.DeviceUtils;
+
 import java.io.File;
-import java.lang.reflect.Method;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
-import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
-import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 
 /**
@@ -17,24 +20,9 @@ import de.robv.android.xposed.callbacks.XC_LoadPackage;
  */
 public class XposedInit implements IXposedHookLoadPackage {
 
-    private Method getBytesMethod;
-    private Method getDexMethod;
-
-
-    /**
-     * 加固应用包含的包名，如果无法脱壳，请将application的包名，加到此数组
-     * com.stub.StubApp 360加固
-     * s.h.e.l.l.S 爱加密
-     * com.secneo.apkwrapper.ApplicationWrapper 梆梆加固
-     * com.tencent.StubShell.TxAppEntry 腾讯加固
-     */
-    private String[] packages = {"com.stub.StubApp", "s.h.e.l.l.S",
-            "com.secneo.apkwrapper.ApplicationWrapper", "com.tencent.StubShell.TxAppEntry"};
 
     public static void log(String txt) {
-        if (!BuildConfig.DEBUG) {
-            return;
-        }
+
         XposedBridge.log("dumpdex-> " + txt);
     }
 
@@ -47,59 +35,24 @@ public class XposedInit implements IXposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) {
-        Class<?> clazz = null;
-        for (String aPackage : packages) {
-            clazz = XposedHelpers.findClassIfExists(aPackage, lpparam.classLoader);
-            if (clazz != null) {
-                log("find class:" + aPackage);
-                break;
-            }
-        }
-        if (clazz == null) {
+        PackerInfo.Type type = PackerInfo.find(lpparam);
+        if (type == null) {
             return;
         }
         final String packageName = lpparam.packageName;
-        XposedBridge.log(packageName);
-        try {
-            initDexMethod();
-        } catch (Throwable t) {
-            //Android版本不支持该插件
-            log(t);
-            return;
-        }
-        XposedHelpers.findAndHookMethod("java.lang.ClassLoader", lpparam.classLoader, "loadClass", String.class, boolean.class, new XC_MethodHook() {
-            @Override
-            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                Class c = (Class) param.getResult();
-                if (c == null) {
-                    return;
-                }
-                Object object = getDexMethod.invoke(c);
-                byte[] array = (byte[]) getBytesMethod.invoke(object);
-                if (array == null) {
-                    return;
-                }
-                saveData(packageName, array);
+        if (lpparam.packageName.equals(packageName)) {
+            String path = "/data/data/" + packageName + "/dump";
+            File parent = new File(path);
+            if (!parent.exists() || !parent.isDirectory()) {
+                parent.mkdirs();
             }
-        });
-    }
+            log("sdk version:" + Build.VERSION.SDK_INT);
+            if (DeviceUtils.isOreo()) {
+                OreoDump.init(lpparam);
+            } else {
+                LowSdkDump.init(lpparam,type);
+            }
 
-    private void saveData(String packageName, byte[] array) {
-        String path = "/data/data/" + packageName + "/dump";
-        File parent = new File(path);
-        if (!parent.exists() || !parent.isDirectory()) {
-            parent.mkdirs();
         }
-        final File file = new File(path, "source-" + array.length + ".dex");
-        if (!file.exists()) {
-            FileUtils.writeByteToFile(array, file.getAbsolutePath());
-            log("dump dex :" + file.getAbsolutePath());
-        }
-    }
-
-    public void initDexMethod() throws ClassNotFoundException, NoSuchMethodException {
-        Class dex = Class.forName("com.android.dex.Dex");
-        this.getBytesMethod = dex.getDeclaredMethod("getBytes");
-        this.getDexMethod = Class.forName("java.lang.Class").getDeclaredMethod("getDex");
     }
 }
